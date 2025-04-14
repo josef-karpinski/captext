@@ -35,16 +35,8 @@ generateTextButton.addEventListener('click', async () => {
   }
   
   try {
-    const ocrPromises = pastedImages.map((imageData, index) => {
-      return Tesseract.recognize(imageData, 'eng', {
-        logger: (m) => console.log(`Image ${index+1}:`, m)  // Track OCR progress
-      })
-      .then(({ data: { text } }) => `Image ${index + 1} Text:\n${text}\n\n`)
-      .catch(err => `Error processing image ${index + 1}: ${err}\n`);
-    });
-    
-    // Wait for all OCR promises to resolve
-    const results = await Promise.all(ocrPromises);
+    // process images
+    const results = await processImagesBatches(pastedImages, 10);
     
     // Combine and download as a .txt file
     downloadTextFile(results.join(''));
@@ -52,6 +44,48 @@ generateTextButton.addEventListener('click', async () => {
     console.error('Something went wrong with OCR:', err);
   }
 });
+
+
+// not used
+async function processImagesSequentially(images) {
+  const results = [];
+  for (let i = 0; i < images.length; i++) {
+    try {
+      const result = await Tesseract.recognize(images[i], 'eng', {
+        logger: (m) => console.log(`Image ${i + 1}:`, m)
+      });
+      results.push(`Image ${i + 1} Text:\n${result.data.text}\n\n`);
+    } catch (err) {
+      results.push(`Error processing image ${i + 1}: ${err}\n`);
+    }
+  }
+  return results;
+}
+
+async function processImagesBatches(images, batchSize = 2) {
+  const results = [];
+
+  // Helper to process one batch of images concurrently
+  const processBatch = async (batch, batchIndex) => {
+    const batchPromises = batch.map((imageData, index) =>
+      Tesseract.recognize(imageData, 'eng', {
+        logger: (m) => console.log(`Batch ${batchIndex + 1}, Image ${index + 1}:`, m),
+      })
+      .then(({ data: { text } }) => `Image ${results.length + 1} Text:\n${text}\n\n`)
+      .catch(err => `Error processing image ${results.length + 1}: ${err}\n`)
+    );
+
+    const batchResults = await Promise.all(batchPromises);
+    results.push(...batchResults);
+  };
+
+  for (let i = 0; i < images.length; i += batchSize) {
+    const batch = images.slice(i, i + batchSize);
+    await processBatch(batch, Math.floor(i / batchSize));
+  }
+
+  return results;
+}
 
 function downloadTextFile(text) {
   const blob = new Blob([text], { type: 'text/plain' });
