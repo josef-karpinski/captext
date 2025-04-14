@@ -64,24 +64,31 @@ async function processImagesSequentially(images) {
 
 async function processImagesBatches(images, batchSize = 2) {
   const results = [];
+  let imageCounter = 1;
 
-  // Helper to process one batch of images concurrently
-  const processBatch = async (batch, batchIndex) => {
+  const processBatch = async (batch, batchIndex, globalStartIndex) => {
     const batchPromises = batch.map((imageData, index) =>
       Tesseract.recognize(imageData, 'eng', {
         logger: (m) => console.log(`Batch ${batchIndex + 1}, Image ${index + 1}:`, m),
       })
-      .then(({ data: { text } }) => `Image ${results.length + 1} Text:\n${text}\n\n`)
-      .catch(err => `Error processing image ${results.length + 1}: ${err}\n`)
+      .then(({ data: { text } }) => ({
+        index: globalStartIndex + index,
+        text: `Image ${globalStartIndex + index + 1} Text:\n${text}\n\n`
+      }))
+      .catch(err => ({
+        index: globalStartIndex + index,
+        text: `Error processing image ${globalStartIndex + index + 1}: ${err}\n`
+      }))
     );
-
+  
     const batchResults = await Promise.all(batchPromises);
-    results.push(...batchResults);
+    // Sort and insert based on original index
+    batchResults.sort((a, b) => a.index - b.index).forEach(r => results[r.index] = r.text);
   };
 
   for (let i = 0; i < images.length; i += batchSize) {
     const batch = images.slice(i, i + batchSize);
-    await processBatch(batch, Math.floor(i / batchSize));
+    await processBatch(batch, Math.floor(i / batchSize), i);
   }
 
   return results;
