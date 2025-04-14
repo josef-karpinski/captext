@@ -8,13 +8,16 @@
 </head>
 <body>
 
+ <main class="hero-section">
   <div id="drop-area">Paste an image here (Ctrl + V)</div>
   <div id="gallery"></div>
   
-  <button type="button" id="generate-text-button">Generate Text</button>
+  <input type="file" id="file-input" accept=".pdf" multiple />
+  <button type="button" id="generate-text-button" class="btn-primary">Generate Text</button>
+ </main>
   
   <script src="https://cdnjs.cloudflare.com/ajax/libs/tesseract.js/6.0.0/tesseract.min.js"></script>
-  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
   <script src="index.js"></script>
 </body>
 </html>

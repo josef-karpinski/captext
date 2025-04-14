@@ -1,6 +1,8 @@
 const gallery = document.getElementById('gallery');
 const generateTextButton = document.getElementById('generate-text-button');
+const fileInput = document.getElementById('file-input'); // Add a file input element in your HTML
 let pastedImages = [];
+let pdfTexts = [];
 
 // Handle paste events to capture images from clipboard
 document.addEventListener('paste', (e) => {
@@ -27,24 +29,58 @@ document.addEventListener('paste', (e) => {
   }
 });
 
+// Handle file input for PDFs
+fileInput.addEventListener('change', async (e) => {
+  const files = e.target.files;
+  for (const file of files) {
+    if (file.type === 'application/pdf') {
+      try {
+        const pdfText = await extractTextFromPDF(file);
+        pdfTexts.push(pdfText);
+      } catch (err) {
+        console.error('Error processing PDF:', err);
+      }
+    } else {
+      alert('Only PDF files are supported for this option.');
+    }
+  }
+});
+
 // Run Tesseract on all pasted images and download results
 generateTextButton.addEventListener('click', async () => {
-  if (!pastedImages.length) {
-    alert('No images pasted yet!');
+  if (!pastedImages.length && !pdfTexts.length) {
+    alert('No images or PDFs processed yet!');
     return;
   }
   
   try {
-    // process images
-    const results = await processImagesBatches(pastedImages, 10);
+    // Process images
+    const imageResults = await processImagesBatches(pastedImages, 10);
+    
+    // Combine image and PDF results
+    const allResults = [...imageResults, ...pdfTexts];
     
     // Combine and download as a .txt file
-    downloadTextFile(results.join(''));
+    downloadTextFile(allResults.join(''));
   } catch (err) {
     console.error('Something went wrong with OCR:', err);
   }
 });
 
+// Function to extract text from a PDF file
+async function extractTextFromPDF(file) {
+  const pdf = await pdfjsLib.getDocument(await file.arrayBuffer()).promise;
+  let text = '';
+
+  for (let i = 1; i <= pdf.numPages; i++) {
+    const page = await pdf.getPage(i);
+    const content = await page.getTextContent();
+    const pageText = content.items.map((item) => item.str).join(' ');
+    text += `Page ${i}:\n${pageText}\n\n`;
+  }
+
+  return text;
+}
 
 // not used
 async function processImagesSequentially(images) {
