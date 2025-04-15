@@ -94,3 +94,27 @@ input[type="file"] {
 input[type="file"]:focus {
     border-color: #007bff;
 }
+
+.dropdown {
+    appearance: none; /* Remove default browser styling */
+    background-color: #ffffff;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    padding: 10px 15px;
+    margin: 8px;
+    font-size: 16px;
+    color: #333;
+    cursor: pointer;
+    transition: border-color 0.3s, box-shadow 0.3s;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.dropdown:focus {
+    border-color: #007bff;
+    box-shadow: 0 0 5px rgba(0, 123, 255, 0.5);
+    outline: none;
+}
+
+.dropdown:hover {
+    border-color: #0056b3;
+}

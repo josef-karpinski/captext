@@ -1,23 +1,44 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>CapText</title>
-  <link rel="stylesheet" href="index.css">
+  <link rel="stylesheet" href="index.css" />
 </head>
 <body>
+  <main class="hero-section">
+    <div id="drop-area">Paste an image here (Ctrl + V)</div>
+    <div id="gallery"></div>
 
- <main class="hero-section">
-  <div id="drop-area">Paste an image here (Ctrl + V)</div>
-  <div id="gallery"></div>
+    <label for="file-type-select">Choose file type:</label>
+    <select id="file-type-select" class="dropdown">
+      <option value="screenshots">Screenshots</option>
+      <option value="pdfs">PDFs</option>
+    </select>
+
+    <input type="file" id="file-input-screenshots" accept="image/*" multiple style="display: none;" />
+    <input type="file" id="file-input-pdfs" accept=".pdf" multiple style="display: none;" />
+
+    <button type="button" id="generate-text-button" class="btn-primary">Generate Text</button>
+  </main>
   
-  <input type="file" id="file-input" accept=".pdf" multiple />
-  <button type="button" id="generate-text-button" class="btn-primary">Generate Text</button>
- </main>
+  <!-- Load Tesseract.js (UMD build) from CDN -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/tesseract.js/4.0.1/tesseract.min.js"></script>
   
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/tesseract.js/6.0.0/tesseract.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
-  <script src="index.js"></script>
+  <!-- Load pdf.js as an ES module -->
+  <script type="module">
+    // Import the module version of pdf.js from cdnjs (version 5.0.375)
+    import * as pdfjsLib from "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/5.0.375/pdf.min.mjs";
+    
+    // Set the worker source using the corresponding module worker file.
+    pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/5.0.375/pdf.worker.min.mjs";
+    
+    // Import your main application code (ensure index.js is treated as a module)
+    import "./index.js";
+    
+    // Optionally, expose pdfjsLib globally if needed by your code:
+    window.pdfjsLib = pdfjsLib;
+  </script>
 </body>
 </html>
